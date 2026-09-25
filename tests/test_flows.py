@@ -25,16 +25,30 @@ def released(repo: Path, commit: Commit) -> Path:
 
 @pytest.fixture
 def fake_gh(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A `gh` on PATH that records its arguments; exits with $FAKE_GH_EXIT."""
+    """A `gh` on PATH that logs each call's args (calls separated by `===CALL===` lines).
+
+    `pr create` and `release create` fail when $FAKE_GH_EXIT is set. `release view` succeeds
+    only when $FAKE_GH_RELEASE_EXISTS=1; otherwise it fails with $FAKE_GH_VIEW_STDERR (default
+    "release not found", gh's real message for a tag with no Release).
+    """
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     log = tmp_path / "gh.log"
     gh = bin_dir / "gh"
     gh.write_text(
         "#!/bin/sh\n"
-        f'printf "%s\\n" "$@" > "{log}"\n'
+        f'{{ printf "%s\\n" "$@"; printf -- "===CALL===\\n"; }} >> "{log}"\n'
+        'if [ "$1 $2" = "release view" ]; then\n'
+        '  if [ "${FAKE_GH_RELEASE_EXISTS:-0}" = "1" ]; then\n'
+        '    echo "https://github.com/o/r/releases/tag/$3"; exit 0\n'
+        "  fi\n"
+        '  echo "${FAKE_GH_VIEW_STDERR:-release not found}" >&2\n'
+        "  exit 1\n"
+        "fi\n"
         'if [ "${FAKE_GH_EXIT:-0}" != 0 ]; then echo "gh: boom" >&2; exit "$FAKE_GH_EXIT"; fi\n'
-        "echo https://github.com/o/r/pull/7\n"
+        'if [ "$1 $2" = "release create" ]; then echo "https://github.com/o/r/releases/tag/$3"\n'
+        "else echo https://github.com/o/r/pull/7\n"
+        "fi\n"
     )
     gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
     monkeypatch.setenv("PATH", f"{bin_dir}:{Path('/usr/bin')}:{Path('/bin')}")
@@ -74,6 +88,64 @@ def test_missing_gh_is_reported(
         release.cut(Config(root=released), None)
 
 
+def _tagged_release(released: Path, commit: Commit, version: str, notes: str) -> Config:
+    changelog = cliff.HEADER + f"## {version} (2020-01-01)\n\n\n### Features\n\n{notes}\n"
+    commit(f"chore(release): {version}", VERSION=f"{version}\n", **{"CHANGELOG.md": changelog})
+    config = Config(root=released)
+    release.create_tag(config, version, push=False)
+    return config
+
+
+def test_publish_release_creates_the_missing_release(
+    released: Path, commit: Commit, fake_gh: Path
+) -> None:
+    config = _tagged_release(released, commit, "1.1.0", "* a")
+    assert release.publish_release(config, "1.1.0") is True
+    calls = [c.splitlines() for c in fake_gh.read_text().split("===CALL===\n") if c]
+    assert calls[0] == ["release", "view", "v1.1.0"]
+    assert calls[1][:5] == ["release", "create", "v1.1.0", "--title", "v1.1.0"]
+    assert "--notes" in calls[1] and "* a" in calls[1] and "--verify-tag" in calls[1]
+
+
+def test_publish_release_is_idempotent_when_already_published(
+    released: Path, commit: Commit, fake_gh: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _tagged_release(released, commit, "1.1.0", "* a")
+    monkeypatch.setenv("FAKE_GH_RELEASE_EXISTS", "1")
+    assert release.publish_release(config, "1.1.0") is False
+    assert "release create" not in fake_gh.read_text()
+
+
+def test_publish_release_never_treats_a_real_gh_error_as_missing(
+    released: Path, commit: Commit, fake_gh: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _tagged_release(released, commit, "1.1.0", "* a")
+    monkeypatch.setenv("FAKE_GH_VIEW_STDERR", "gh: authentication failed")
+    with pytest.raises(
+        release.ReleaseError, match="gh release view v1.1.0 failed: gh: authentication failed"
+    ):
+        release.publish_release(config, "1.1.0")
+    assert "release create" not in fake_gh.read_text()
+
+
+def test_publish_release_reports_a_create_failure(
+    released: Path, commit: Commit, fake_gh: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _tagged_release(released, commit, "1.1.0", "* a")
+    monkeypatch.setenv("FAKE_GH_EXIT", "1")
+    with pytest.raises(release.ReleaseError, match="gh release create failed: gh: boom"):
+        release.publish_release(config, "1.1.0")
+
+
+def test_publish_release_missing_gh_is_reported(
+    released: Path, commit: Commit, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _tagged_release(released, commit, "1.1.0", "* a")
+    monkeypatch.setattr("shutil.which", lambda _: None)
+    with pytest.raises(release.ReleaseError, match="gh is not installed"):
+        release.publish_release(config, "1.1.0")
+
+
 def test_cli_release_paths(
     released: Path, commit: Commit, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -109,6 +181,39 @@ def test_cli_detect_and_tag_for_ci(
     assert main(["-C", str(released), "tag", "v1.0.1", "--push"]) == 0
     assert capsys.readouterr().out.endswith("v1.0.1\n")
     assert git(released, "ls-remote", "--tags", "origin", "v1.0.1")
+
+
+def test_cli_publish_release_repairs_a_rerun_after_a_failed_release_step(
+    released: Path,
+    commit: Commit,
+    fake_gh: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`tag.yml`'s scenario: the tag got pushed, then the "GitHub Release" step failed, so a
+    re-run of the same job sees `released=false` but must still publish the Release."""
+    commit(
+        "chore(release): 1.1.0",
+        VERSION="1.1.0\n",
+        **{"CHANGELOG.md": cliff.HEADER + "## 1.1.0 (2020-01-01)\n\n\n### Features\n\n* a\n"},
+    )
+    out_file = tmp_path / "github_output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out_file))
+    assert main(["-C", str(released), "detect", "--github-output"]) == 0
+    assert out_file.read_text() == "released=true\nversion=1.1.0\ntag=v1.1.0\n"
+    assert main(["-C", str(released), "tag", "1.1.0", "--push"]) == 0
+    # ...the real workflow's "GitHub Release" step fails here (network/token/notes error).
+
+    out_file.write_text("")  # a re-run of the job gets a fresh $GITHUB_OUTPUT
+    assert main(["-C", str(released), "detect", "--github-output"]) == 0
+    assert out_file.read_text() == "released=false\nversion=1.1.0\ntag=v1.1.0\n"
+
+    assert main(["-C", str(released), "publish-release", "1.1.0"]) == 0
+    assert "published" in capsys.readouterr().err
+    calls = [c.splitlines() for c in fake_gh.read_text().split("===CALL===\n") if c]
+    assert calls[-2] == ["release", "view", "v1.1.0"]
+    assert calls[-1][:3] == ["release", "create", "v1.1.0"]
 
 
 def test_detect_edge_cases(released: Path, commit: Commit) -> None:

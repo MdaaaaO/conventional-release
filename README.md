@@ -49,6 +49,8 @@ ecosystems where adding Node just to write a changelog isn't worth it.
    (publish to PyPI or npm, build images) run after it in the same workflow.
 
 The tag is never created on the release branch: after a squash merge, that commit never lands on `main`.
+If the Release step fails after the tag was already pushed, re-running the `tag` workflow (same
+commit) publishes the still-missing Release without re-tagging.
 
 ## Install
 
@@ -73,6 +75,7 @@ nothing else to install. `gh` is needed only to open the PR (`--no-pr` skips it)
 | `check-title "<title>"` | validate a PR title / commit subject; exits 1 with the reason |
 | `detect [--github-output]` | CI: is HEAD a release commit that still needs its tag? prints `released=`, `version=`, `tag=` |
 | `tag X.Y.Z [--push]` | CI: create the annotated tag on HEAD |
+| `publish-release X.Y.Z` | CI: publish the GitHub Release for X.Y.Z's tag if it doesn't have one yet (idempotent) |
 
 **Version inference** follows SemVer: `feat` bumps minor, `fix` and everything else bump patch,
 and a `!` or a `BREAKING CHANGE:` footer bumps major. `feat` and breaking changes bump minor and

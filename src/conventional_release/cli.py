@@ -57,6 +57,12 @@ def _parser() -> argparse.ArgumentParser:
     t.add_argument("version")
     t.add_argument("--push", action="store_true", help="push the tag to origin")
 
+    pr = sub.add_parser(
+        "publish-release",
+        help="CI: publish the GitHub Release for VERSION's tag if it has none yet",
+    )
+    pr.add_argument("version")
+
     i = sub.add_parser(
         "init", help="write the config and the release / pr-title workflows that call ours"
     )
@@ -99,6 +105,9 @@ def _run(args: argparse.Namespace, config: Config) -> int:
                 f.write(result.outputs())
     elif args.command == "tag":
         print(release.create_tag(config, args.version, push=args.push))
+    elif args.command == "publish-release":
+        created = release.publish_release(config, args.version)
+        print("published" if created else "already published", file=sys.stderr)
     elif args.command == "release":
         return _release(args, config)
     elif args.command == "init":
