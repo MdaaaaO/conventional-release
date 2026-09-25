@@ -29,10 +29,12 @@ _NAME_LINE = re.compile(r"""^\s*name\s*=\s*(["'])([^"']*)\1""")
 # manifest -> (its lock file, the manifest table naming the project). The lock records the
 # project itself as a [[package]] entry with the version, so a bump that skips it leaves
 # `uv run --locked` / `cargo build --locked` failing on the release branch.
-_LOCKS = {
+_TOML_LOCKS = {
     "pyproject.toml": ("uv.lock", "project"),
     "Cargo.toml": ("Cargo.lock", "package"),
 }
+# npm repeats the version at the top level and in packages[""]; `npm ci` rejects a mismatch.
+_NPM_LOCKS = ("package-lock.json", "npm-shrinkwrap.json")
 
 
 def _toml_version(path: Path) -> tuple[str, str] | None:
@@ -109,13 +111,21 @@ def _normalize(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
-def sync_lock(manifest: Path, version: str) -> Path | None:
-    """Set the project's own [[package]] version in the lock file next to `manifest`.
+def sync_locks(manifest: Path, version: str) -> list[Path]:
+    """Set the project's own version in the lock files next to `manifest`; return those changed.
 
-    Returns the lock file when it changed; None when there is no lock file, the manifest names
-    no project, or the lock has no entry for it (nothing to keep in step).
+    A lock file that is missing, has no entry for the project, or already says `version` is left
+    alone: there is nothing to keep in step.
     """
-    spec = _LOCKS.get(manifest.name)
+    if manifest.name == "package.json":
+        locks = [_sync_npm_lock(manifest.with_name(name), version) for name in _NPM_LOCKS]
+        return [lock for lock in locks if lock]
+    lock = _sync_toml_lock(manifest, version)
+    return [lock] if lock else []
+
+
+def _sync_toml_lock(manifest: Path, version: str) -> Path | None:
+    spec = _TOML_LOCKS.get(manifest.name)
     if spec is None or not (lock := manifest.with_name(spec[0])).exists():
         return None
     with manifest.open("rb") as f:
@@ -137,3 +147,46 @@ def sync_lock(manifest: Path, version: str) -> Path | None:
             lock.write_text("".join(lines))
             return lock
     return None
+
+
+def _npm_root(lock: dict[str, object]) -> dict[str, object] | None:
+    """packages[""], the project's own entry, when the lock has one."""
+    packages = lock.get("packages")
+    root = packages.get("") if isinstance(packages, dict) else None
+    return root if isinstance(root, dict) else None
+
+
+def _sync_npm_lock(lock: Path, version: str) -> Path | None:
+    """Edit the top-level "version" and the one in packages[""] (lockfileVersion 2 and 3).
+
+    npm writes `name`, `version` first in both objects, so each is the first "version" key from
+    where the object starts. The result is parsed back to prove the edit hit exactly those two.
+    """
+    if not lock.exists():
+        return None
+    text = lock.read_text()
+    data = json.loads(text)
+    if not isinstance(data, dict) or not isinstance(data.get("version"), str):
+        return None
+    root = _npm_root(data)
+    if data["version"] == version and (
+        not isinstance(root, dict) or root.get("version") == version
+    ):
+        return None
+    key = re.compile(r'("version"\s*:\s*")[^"]*"')
+    new = key.sub(lambda m: m.group(1) + version + '"', text, count=1)
+    if isinstance(root, dict) and "version" in root:
+        at = re.search(r'"packages"\s*:\s*\{\s*""\s*:\s*\{', new)
+        if at is None:
+            raise VersionFileError(f'{lock.name}: could not locate packages[""]')
+        new = new[: at.end()] + key.sub(
+            lambda m: m.group(1) + version + '"', new[at.end() :], count=1
+        )
+    check = json.loads(new)
+    root_after = _npm_root(check) or {}
+    if check["version"] != version or (
+        "version" in root_after and root_after["version"] != version
+    ):
+        raise VersionFileError(f"{lock.name}: could not locate the version strings")
+    lock.write_text(new)
+    return lock

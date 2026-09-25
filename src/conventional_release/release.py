@@ -123,7 +123,7 @@ def cut(config: Config, requested: str | None, *, push: bool = True, open_pr: bo
     files = version_files(config)
     for path in files:
         versionfiles.write_version(path, version)
-    locks = [lock for path in files if (lock := versionfiles.sync_lock(path, version))]
+    locks = [lock for path in files for lock in versionfiles.sync_locks(path, version)]
 
     changed = (str(p.relative_to(root)) for p in (*files, *locks))
     git.run(root, "add", "--", config.changelog, *changed)
