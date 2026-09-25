@@ -1,0 +1,78 @@
+name: release
+
+# The project releases itself: `make release` opens the release PR; merging it lands here.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    uses: ./.github/workflows/tag.yml
+    permissions:
+      contents: write
+    with:
+      tool-spec: "."
+
+  build:
+    needs: tag
+    if: needs.tag.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+      - uses: astral-sh/setup-uv@v10
+      - run: uv build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write  # trusted publishing, no token stored anywhere
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  pypi:
+    needs: [tag, testpypi]
+    runs-on: ubuntu-latest
+    environment: pypi  # required reviewer: the maintainer
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  # `uses: MdaaaaO/conventional-release/.github/workflows/tag.yml@v0` follows the latest 0.x.
+  major-tag:
+    needs: [tag, pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+      - env:
+          TAG: ${{ needs.tag.outputs.tag }}
+        run: |
+          major="${TAG%%.*}"
+          git tag -f "$major" "$TAG^{commit}"
+          git push -f origin "refs/tags/$major"

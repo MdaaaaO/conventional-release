@@ -1,0 +1,79 @@
+name: tag
+
+# Reusable: the CI half of a release. Call it on every push to the default branch. When the
+# pushed commit is a squash-merged `chore(release): X.Y.Z`, it tags that commit vX.Y.Z and
+# publishes a GitHub Release with the version's CHANGELOG section; otherwise it does nothing.
+#
+# Run your publish jobs *after* it in the same workflow (`needs: tag`, `if: released`): a tag
+# pushed with GITHUB_TOKEN starts no other workflow, so `on: push: tags` would never fire.
+# The caller grants `contents: write`.
+
+on:
+  workflow_call:
+    inputs:
+      tool-spec:
+        description: "What `uvx --from` installs, e.g. `conventional-release==0.1.0`"
+        type: string
+        default: "conventional-release>=0.1,<0.2"
+      working-directory:
+        description: Directory of the project inside the repository
+        type: string
+        default: "."
+      github-release:
+        description: Publish a GitHub Release with the changelog section
+        type: boolean
+        default: true
+    outputs:
+      released:
+        description: "'true' when this run created the tag"
+        value: ${{ jobs.tag.outputs.released }}
+      version:
+        description: The released version, e.g. 1.4.0
+        value: ${{ jobs.tag.outputs.version }}
+      tag:
+        description: The tag, e.g. v1.4.0
+        value: ${{ jobs.tag.outputs.tag }}
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.detect.outputs.released }}
+      version: ${{ steps.detect.outputs.version }}
+      tag: ${{ steps.detect.outputs.tag }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    env:
+      TOOL: ${{ inputs.tool-spec }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v10
+
+      - id: detect
+        name: Is this a release commit?
+        run: uvx --from "$TOOL" conventional-release detect --github-output
+
+      - name: Tag the release commit
+        if: steps.detect.outputs.released == 'true'
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          uvx --from "$TOOL" conventional-release tag "$VERSION" --push
+
+      - name: GitHub Release
+        if: steps.detect.outputs.released == 'true' && inputs.github-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.detect.outputs.version }}
+          TAG: ${{ steps.detect.outputs.tag }}
+        run: |
+          uvx --from "$TOOL" conventional-release notes "$VERSION" > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag

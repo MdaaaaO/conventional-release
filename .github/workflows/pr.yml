@@ -1,0 +1,16 @@
+name: pr
+
+# This repo checks its own PR titles with its own checkout of the tool.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    uses: ./.github/workflows/pr-title.yml
+    with:
+      tool-spec: "."

@@ -1,0 +1,36 @@
+name: pr-title
+
+# Reusable: the PR title becomes the squash commit subject, and that subject becomes the
+# changelog line — so the title must be a conventional commit. Make this check required.
+
+on:
+  workflow_call:
+    inputs:
+      tool-spec:
+        description: "What `uvx --from` installs, e.g. `conventional-release==0.1.0`"
+        type: string
+        default: "conventional-release>=0.1,<0.2"
+      working-directory:
+        description: Directory holding the project's conventional-release config
+        type: string
+        default: "."
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # For the project's configured types; nothing from the PR is executed.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v10
+
+      - name: Title is a conventional commit
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          TOOL: ${{ inputs.tool-spec }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: uvx --from "$TOOL" conventional-release check-title "$TITLE"
