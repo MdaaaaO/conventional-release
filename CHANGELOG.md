@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file. Generated b
 [conventional-release](https://github.com/MdaaaaO/conventional-release) from
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## 0.3.0 (2026-09-25)
+
+
+### Features
+
+* **ci:** runs-on input for the reusable workflows ([e190b0c](https://github.com/MdaaaaO/conventional-release/commit/e190b0c65132b1f6ae4502af702fbbd154095c2a))
+
+
+### Bug Fixes
+
+* **ci:** run the current conventional-release by default in the reusable workflows ([14d7e17](https://github.com/MdaaaaO/conventional-release/commit/14d7e17f1ce873f7f28beeaeee783041c725b6e7))
+
 ## 0.2.0 (2026-09-25)
 
 
