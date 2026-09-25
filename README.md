@@ -65,6 +65,7 @@ nothing else to install. `gh` is needed only to open the PR (`--no-pr` skips it)
 
 | command | does |
 |---|---|
+| `init [--force]` | set a repo up: `.conventional-release.toml` (detected version files and base branch) and the two workflows below; keeps files that exist |
 | `release [major\|minor\|patch\|X.Y.Z] [--dry-run] [--no-push] [--no-pr]` | the local half, above |
 | `next [level\|X.Y.Z]` | print the version the next release would get |
 | `current` | print the current version |
@@ -79,7 +80,8 @@ major even before `1.0.0`.
 
 ## GitHub Actions
 
-Both workflows are reusable. Call them from your repo:
+Both workflows are reusable. Call them from your repo; `conventional-release init` writes these two
+callers for you:
 
 ```yaml
 # .github/workflows/release.yml

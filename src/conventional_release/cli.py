@@ -8,7 +8,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from conventional_release import __version__, cliff, release
+from conventional_release import __version__, cliff, release, scaffold
 from conventional_release.config import Config, ConfigError, load
 from conventional_release.git import GitError
 from conventional_release.versionfiles import VersionFileError
@@ -57,6 +57,11 @@ def _parser() -> argparse.ArgumentParser:
     t.add_argument("version")
     t.add_argument("--push", action="store_true", help="push the tag to origin")
 
+    i = sub.add_parser(
+        "init", help="write the config and the release / pr-title workflows that call ours"
+    )
+    i.add_argument("--force", action="store_true", help="overwrite the workflows if they exist")
+
     c = sub.add_parser("check-title", help="validate a PR title / commit subject")
     c.add_argument("title")
     return p
@@ -96,6 +101,19 @@ def _run(args: argparse.Namespace, config: Config) -> int:
         print(release.create_tag(config, args.version, push=args.push))
     elif args.command == "release":
         return _release(args, config)
+    elif args.command == "init":
+        return _init(args, config)
+    return 0
+
+
+def _init(args: argparse.Namespace, config: Config) -> int:
+    for path, written in scaffold.init(config.root, force=args.force):
+        print(f"{'wrote' if written else 'kept '} {path}")
+    print(
+        "\nNext: commit these, make the pr-title check required on "
+        f"{load(config.root).base_branch}, and try `conventional-release release --dry-run`.",
+        file=sys.stderr,
+    )
     return 0
 
 
