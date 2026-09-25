@@ -23,6 +23,12 @@ on:
         description: Publish a GitHub Release with the changelog section
         type: boolean
         default: true
+      runs-on:
+        description: >-
+          JSON value for the job's runs-on, e.g. '"ubuntu-latest"' or
+          '["self-hosted", "linux", "x64"]'
+        type: string
+        default: '"ubuntu-latest"'
     outputs:
       released:
         description: "'true' when this run created the tag"
@@ -36,7 +42,7 @@ on:
 
 jobs:
   tag:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     permissions:
       contents: write
     outputs:
