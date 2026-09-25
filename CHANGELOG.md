@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. Generated b
 [conventional-release](https://github.com/MdaaaaO/conventional-release) from
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## 0.1.2 (2026-09-25)
+
+
+### Bug Fixes
+
+* keep uv.lock and Cargo.lock in step with the version bump ([#9](https://github.com/MdaaaaO/conventional-release/issues/9)) ([a7fb9c5](https://github.com/MdaaaaO/conventional-release/commit/a7fb9c507f4c19b6e976ebbf99b78f068a9cf8e4))
+
 ## 0.1.1 (2026-09-25)
 
 
