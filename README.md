@@ -10,10 +10,10 @@
 | src/conventional\_release/cliff.py        |       71 |        0 |       16 |        0 |    100% |           |
 | src/conventional\_release/config.py       |      103 |        1 |       40 |        2 |     98% |99-\>101, 116 |
 | src/conventional\_release/git.py          |       44 |        3 |        6 |        0 |     94% | 45, 55-56 |
-| src/conventional\_release/release.py      |      154 |        2 |       72 |        5 |     97% |66, 82-\>84, 84-\>86, 115, 207-\>209 |
+| src/conventional\_release/release.py      |      156 |        2 |       72 |        5 |     97% |66, 82-\>84, 84-\>86, 115, 209-\>211 |
 | src/conventional\_release/semver.py       |       18 |        1 |        8 |        1 |     92% |        22 |
-| src/conventional\_release/versionfiles.py |       68 |        3 |       28 |        3 |     94% |59, 79, 96 |
-| **TOTAL**                                 |  **544** |   **12** |  **194** |   **13** | **97%** |           |
+| src/conventional\_release/versionfiles.py |       95 |        3 |       42 |        3 |     96% |68, 88, 105 |
+| **TOTAL**                                 |  **573** |   **12** |  **208** |   **13** | **97%** |           |
 
 
 ## Setup coverage badge
