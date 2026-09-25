@@ -186,6 +186,10 @@ def test_old_npm_lock_and_shrinkwrap(tmp_path: Path) -> None:
     assert shrinkwrap.read_text() == old.replace("1.0.0", "1.1.0")
     (tmp_path / "package-lock.json").write_text('["not", "a", "lock"]\n')
     assert sync_locks(manifest, "1.2.0") == [shrinkwrap]
+    lock = tmp_path / "package-lock.json"
+    lock.write_text('{"version": "1.2.0", "packages": ["odd"]}\n')  # packages not an object
+    assert sync_locks(manifest, "1.3.0") == [lock, shrinkwrap]
+    assert lock.read_text() == '{"version": "1.3.0", "packages": ["odd"]}\n'
 
 
 def test_npm_lock_with_an_unexpected_shape_is_refused(tmp_path: Path) -> None:

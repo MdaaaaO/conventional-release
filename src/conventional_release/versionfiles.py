@@ -149,6 +149,13 @@ def _sync_toml_lock(manifest: Path, version: str) -> Path | None:
     return None
 
 
+def _npm_root(lock: dict[str, object]) -> dict[str, object] | None:
+    """packages[""], the project's own entry, when the lock has one."""
+    packages = lock.get("packages")
+    root = packages.get("") if isinstance(packages, dict) else None
+    return root if isinstance(root, dict) else None
+
+
 def _sync_npm_lock(lock: Path, version: str) -> Path | None:
     """Edit the top-level "version" and the one in packages[""] (lockfileVersion 2 and 3).
 
@@ -161,7 +168,7 @@ def _sync_npm_lock(lock: Path, version: str) -> Path | None:
     data = json.loads(text)
     if not isinstance(data, dict) or not isinstance(data.get("version"), str):
         return None
-    root = data.get("packages", {}).get("")
+    root = _npm_root(data)
     if data["version"] == version and (
         not isinstance(root, dict) or root.get("version") == version
     ):
@@ -176,7 +183,7 @@ def _sync_npm_lock(lock: Path, version: str) -> Path | None:
             lambda m: m.group(1) + version + '"', new[at.end() :], count=1
         )
     check = json.loads(new)
-    root_after = check.get("packages", {}).get("", {})
+    root_after = _npm_root(check) or {}
     if check["version"] != version or (
         "version" in root_after and root_after["version"] != version
     ):
