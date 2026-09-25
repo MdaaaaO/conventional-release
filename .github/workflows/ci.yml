@@ -29,6 +29,26 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: make tests
 
+  # Coverage comment on same-repo PRs; on main it refreshes the badge on the
+  # python-coverage-comment-action-data branch. Not a required check. Fork PRs get a read-only
+  # token, so they get no comment.
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.13"
+      - run: make tests
+      - uses: py-cov-action/python-coverage-comment-action@v4.5
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_GREEN: 95
+          MINIMUM_ORANGE: 85
+
   build:
     runs-on: ubuntu-latest
     steps:

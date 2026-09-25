@@ -9,11 +9,30 @@ Thanks for helping. The short version:
   the type or scope for a breaking change, and explain it in a `BREAKING CHANGE:` footer in the
   PR description.
 - **`make ci` passes locally** before you push. It runs ruff, `mypy --strict`, pytest with branch
-  coverage, and actionlint. You need [uv](https://docs.astral.sh/uv/). Run `make install` once.
-- An automated Claude review comments on each PR from this repo's branches. It is advisory; a
-  maintainer decides. Maintainers can ask it again after a fix push with `@claude review`.
+  coverage (the floor is 95%), and actionlint. You need [uv](https://docs.astral.sh/uv/). Run `make install` once.
 - New behaviour comes with a test. The tests build throwaway git repos in `tmp_path`; see
   `tests/conftest.py`.
+
+## Code review
+
+Every non-draft PR from a branch of this repo gets an automatic review by Claude
+(`.github/workflows/claude-review.yml`). Findings land as inline comments plus one summary comment.
+Maintainers can ask it anything with `@claude …` in a PR or issue comment, and ask for a fresh
+review of the head after a fix push with `@claude review`.
+
+- **The review is advisory, but its threads are not optional.** Every thread is answered and
+  resolved before merge, in one of three ways:
+  - fixed on the branch (the default), with a reply naming the commit;
+  - deferred to an issue labelled `review-followup`, cited in the reply and picked up right after
+    the merge;
+  - disagreed with, with the reason in the reply.
+  The `main` ruleset requires resolved threads, so GitHub enforces this.
+- Release PRs (`chore(release): …`) and Dependabot PRs are not reviewed.
+- Maintainer PRs link an issue with `Closes #N` or `Refs #N`. Release and Dependabot PRs are exempt.
+- The `coverage` job comments the coverage of the change on the PR, and the badge in the README
+  follows `main`. PRs from forks get no Claude review and no coverage comment, because GitHub gives
+  them no secrets and a read-only token. A maintainer runs `@claude review` for them.
+- Merging is squash-only, and the branch is deleted after merge.
 
 ## Releasing (maintainers)
 

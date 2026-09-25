@@ -1,5 +1,12 @@
 # conventional-release
 
+[![PyPI](https://img.shields.io/pypi/v/conventional-release)](https://pypi.org/project/conventional-release/)
+[![Python](https://img.shields.io/pypi/pyversions/conventional-release)](https://pypi.org/project/conventional-release/)
+[![CI](https://github.com/MdaaaaO/conventional-release/actions/workflows/ci.yml/badge.svg)](https://github.com/MdaaaaO/conventional-release/actions/workflows/ci.yml)
+[![Coverage](https://raw.githubusercontent.com/MdaaaaO/conventional-release/python-coverage-comment-action-data/badge.svg)](https://github.com/MdaaaaO/conventional-release/tree/python-coverage-comment-action-data)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A `CHANGELOG.md` in [standard-version](https://github.com/conventional-changelog/standard-version)'s
 exact format, generated from [Conventional Commits](https://www.conventionalcommits.org). Releases go
 through a **pull request**, and **CI tags the merge commit**. This works on a protected `main`, needs
