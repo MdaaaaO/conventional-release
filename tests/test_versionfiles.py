@@ -9,6 +9,7 @@ from conventional_release.versionfiles import (
     VersionFileError,
     has_version,
     read_version,
+    sync_lock,
     write_version,
 )
 
@@ -74,6 +75,62 @@ def test_plain_file_must_be_one_line(tmp_path: Path) -> None:
     path.write_text("1.0.0\nextra\n")
     with pytest.raises(VersionFileError):
         read_version(path)
+
+
+UV_LOCK = """\
+version = 1
+revision = 3
+requires-python = ">=3.11"
+
+[[package]]
+name = "click"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "my-tool"
+version = "1.2.3"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "click" }]
+"""
+
+
+def test_uv_lock_follows_the_project_version(tmp_path: Path) -> None:
+    manifest = tmp_path / "pyproject.toml"
+    manifest.write_text('[project]\nname = "My_Tool"\nversion = "1.2.3"\n')
+    lock = tmp_path / "uv.lock"
+    lock.write_text(UV_LOCK)
+    assert sync_lock(manifest, "1.3.0") == lock
+    assert lock.read_text() == UV_LOCK.replace(
+        'name = "my-tool"\nversion = "1.2.3"', 'name = "my-tool"\nversion = "1.3.0"'
+    )
+    assert sync_lock(manifest, "1.3.0") is None  # already in step
+
+
+def test_cargo_lock_follows_the_crate_version(tmp_path: Path) -> None:
+    manifest = tmp_path / "Cargo.toml"
+    manifest.write_text('[package]\nname = "tool"\nversion = "0.1.0"\n')
+    lock = tmp_path / "Cargo.lock"
+    lock.write_text('version = 4\n\n[[package]]\nname = "tool"\nversion = "0.1.0"\n')
+    assert sync_lock(manifest, "0.2.0") == lock
+    assert lock.read_text().endswith('name = "tool"\nversion = "0.2.0"\n')
+
+
+def test_no_lock_to_sync(tmp_path: Path) -> None:
+    manifest = tmp_path / "pyproject.toml"
+    manifest.write_text('[project]\nversion = "1.2.3"\n')  # no name
+    assert sync_lock(manifest, "1.3.0") is None  # no uv.lock
+    (tmp_path / "uv.lock").write_text(UV_LOCK)
+    assert sync_lock(manifest, "1.3.0") is None  # the manifest names no project
+    manifest.write_text('[project]\nname = "other"\nversion = "1.2.3"\n')
+    assert sync_lock(manifest, "1.3.0") is None  # the lock has no entry for it
+    assert (tmp_path / "uv.lock").read_text() == UV_LOCK
+    assert sync_lock(tmp_path / "VERSION", "1.3.0") is None  # no lock kind for plain files
 
 
 @pytest.mark.parametrize(
