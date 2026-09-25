@@ -14,10 +14,16 @@ on:
         description: Directory holding the project's conventional-release config
         type: string
         default: "."
+      runs-on:
+        description: >-
+          JSON value for the job's runs-on, e.g. '"ubuntu-latest"' or
+          '["self-hosted", "linux", "x64"]'
+        type: string
+        default: '"ubuntu-latest"'
 
 jobs:
   pr-title:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     permissions:
       contents: read
     steps:

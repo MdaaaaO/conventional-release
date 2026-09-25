@@ -126,6 +126,14 @@ with the workflow's `GITHUB_TOKEN` doesn't trigger other workflows, so a separat
 workflow would never start. Also, PyPI trusted publishing checks which workflow file publishes,
 and that must be yours.
 
+Both workflows also take a `runs-on` input (default `'"ubuntu-latest"'`) if you run on self-hosted
+runners:
+
+```yaml
+    with:
+      runs-on: '["self-hosted", "linux"]'
+```
+
 ## Configuration
 
 Every key is optional. Put them in `.conventional-release.toml`, or in `[tool.conventional-release]`
