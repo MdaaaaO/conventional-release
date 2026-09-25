@@ -3,6 +3,8 @@
 Thanks for helping. The short version:
 
 - **Open an issue first** for anything bigger than a typo, so we agree on the change before you write it.
+  The bug and feature forms ask for what a fix needs: the version, the command or workflow, and the
+  commits that show the problem.
 - **PR titles are [Conventional Commits](https://www.conventionalcommits.org).** PRs are
   squash-merged, the title becomes the commit, and the commit becomes the changelog line. The
   `pr-title` check enforces this (`feat(cli): add --json`, `fix: …`, `docs: …`). Put `!` after
