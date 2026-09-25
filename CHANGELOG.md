@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file. Generated b
 [conventional-release](https://github.com/MdaaaaO/conventional-release) from
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## 0.3.1 (2026-09-25)
+
+
+### Bug Fixes
+
+* **ci:** re-running tag.yml publishes a missing GitHub Release ([#21](https://github.com/MdaaaaO/conventional-release/issues/21)) ([cf7056e](https://github.com/MdaaaaO/conventional-release/commit/cf7056e3d81efe96d4f0c3ca2e8244402162166f))
+* **ci:** tag.yml defaults to a version with publish-release ([#22](https://github.com/MdaaaaO/conventional-release/issues/22)) ([ad5b0dd](https://github.com/MdaaaaO/conventional-release/commit/ad5b0dd04b6fd4e3ee87b0dfdb4910906f2d6424))
+
 ## 0.3.0 (2026-09-25)
 
 
