@@ -113,6 +113,19 @@ def test_first_release_uses_the_version_already_in_the_file(repo: Path, commit: 
     assert (repo / "CHANGELOG.md").read_text().startswith(cliff.HEADER + "## 0.1.0 (")
 
 
+def test_cut_keeps_uv_lock_in_step(released: Path, commit: Commit) -> None:
+    lock = '[[package]]\nname = "x"\nversion = "1.0.0"\nsource = { editable = "." }\n'
+    commit(
+        "feat: lock it",
+        **{"pyproject.toml": '[project]\nname = "x"\nversion = "1.0.0"\n', "uv.lock": lock},
+    )
+    (released / "VERSION").unlink()
+    git(released, "commit", "-qam", "chore: pyproject only")
+    release.cut(_config(released), None, push=False)
+    assert (released / "uv.lock").read_text() == lock.replace("1.0.0", "1.1.0")
+    assert not git(released, "status", "--porcelain")  # the lock is in the release commit
+
+
 def test_nothing_to_release(released: Path) -> None:
     with pytest.raises(release.ReleaseError, match="nothing to release"):
         release.plan(_config(released))
