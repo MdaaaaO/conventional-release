@@ -14,7 +14,7 @@ on:
       tool-spec:
         description: "What `uvx --from` installs, e.g. `conventional-release==0.1.0`"
         type: string
-        default: "conventional-release>=0.1,<0.2"
+        default: "conventional-release>=0.2,<1"
       working-directory:
         description: Directory of the project inside the repository
         type: string
