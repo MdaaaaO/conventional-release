@@ -1,0 +1,22 @@
+name: Feature request
+description: Something conventional-release should do that it doesn't
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to release, and where the current behaviour gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like
+      description: >
+        The command, flag, config key or workflow input you have in mind. Note if it would change
+        the CHANGELOG format: that format stays compatible with standard-version.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today instead
