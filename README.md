@@ -96,7 +96,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.tag.outputs.tag }}
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0
       - run: uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
 ```
