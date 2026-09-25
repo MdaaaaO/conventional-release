@@ -1,0 +1,65 @@
+[project]
+name = "conventional-release"
+version = "0.1.0"
+description = "standard-version-style CHANGELOG and release PRs from Conventional Commits, tagged by CI after the merge. No Node."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Georg Kasper" }]
+requires-python = ">=3.11"
+dependencies = ["git-cliff>=2.6,<3"]
+keywords = ["changelog", "conventional-commits", "release", "semver", "standard-version", "git-cliff"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/MdaaaaO/conventional-release"
+Changelog = "https://github.com/MdaaaaO/conventional-release/blob/main/CHANGELOG.md"
+Issues = "https://github.com/MdaaaaO/conventional-release/issues"
+
+[project.scripts]
+conventional-release = "conventional_release.cli:main"
+crel = "conventional_release.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.11", "ruff>=0.6"]
+
+# The project releases itself with itself.
+[tool.conventional-release]
+version-files = ["pyproject.toml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "tests"]
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+
+[tool.coverage.run]
+branch = true
+source = ["conventional_release"]
