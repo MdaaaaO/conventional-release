@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file. Generated b
 [conventional-release](https://github.com/MdaaaaO/conventional-release) from
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## 0.1.1 (2026-09-25)
+
+
+### Bug Fixes
+
+* keep a blank line above the first release in a changelog without a trailing newline ([#5](https://github.com/MdaaaaO/conventional-release/issues/5)) ([8321d35](https://github.com/MdaaaaO/conventional-release/commit/8321d35f207c244af8f84d247972e0eb99213435))
+
+
+### Documentation
+
+* contribution model, coverage report and badges ([#6](https://github.com/MdaaaaO/conventional-release/issues/6)) ([c52e71a](https://github.com/MdaaaaO/conventional-release/commit/c52e71a93a16579e67628bffd9042aacb78bb95d))
+
 ## 0.1.0 (2026-09-25)
 
 
