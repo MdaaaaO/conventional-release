@@ -164,9 +164,11 @@ The default types are `feat fix docs style refactor perf test build ci chore rev
 Version files are edited in place, one line each, and nothing else in the file changes. The
 supported files are `pyproject.toml` (`[project]` or `[tool.poetry]`), `Cargo.toml` (`[package]`
 or `[workspace.package]`), any `*.json` with a top-level `"version"` (`package.json`), and plain
-one-line files (`VERSION`). A `uv.lock` next to `pyproject.toml`, or a `Cargo.lock` next to
-`Cargo.toml`, gets the project's own `[[package]]` version bumped to match, so `uv run --locked`
-and `cargo build --locked` keep working on the release branch. Other lock files are not touched.
+one-line files (`VERSION`). Lock files next to a version file get the project's own version
+bumped to match, so `uv run --locked`, `cargo build --locked` and `npm ci` keep working on the
+release branch: `uv.lock` (next to `pyproject.toml`), `Cargo.lock` (next to `Cargo.toml`), and
+`package-lock.json` or `npm-shrinkwrap.json` (next to `package.json`: the top-level `version` and
+`packages[""]`). Other lock files are not touched.
 
 **Coming from standard-version?** Keep your `CHANGELOG.md`. The default `prepend` mode adds new
 sections above the old ones in the same format. Map your `.versionrc` `types` to `[[types]]`, and
