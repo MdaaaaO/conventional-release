@@ -75,6 +75,7 @@ nothing else to install. `gh` is needed only to open the PR (`--no-pr` skips it)
 | `check-title "<title>"` | validate a PR title / commit subject; exits 1 with the reason |
 | `detect [--github-output]` | CI: is HEAD a release commit that still needs its tag? prints `released=`, `version=`, `tag=` |
 | `tag X.Y.Z [--push]` | CI: create the annotated tag on HEAD |
+| `publish-release X.Y.Z` | CI: publish the GitHub Release for X.Y.Z's tag if it doesn't have one yet (idempotent) |
 
 **Version inference** follows SemVer: `feat` bumps minor, `fix` and everything else bump patch,
 and a `!` or a `BREAKING CHANGE:` footer bumps major. `feat` and breaking changes bump minor and
