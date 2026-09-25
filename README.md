@@ -6,15 +6,14 @@
 |------------------------------------------ | -------: | -------: | -------: | -------: | ------: | --------: |
 | src/conventional\_release/\_\_init\_\_.py |        5 |        2 |        0 |        0 |     60% |       7-8 |
 | src/conventional\_release/\_\_main\_\_.py |        2 |        0 |        0 |        0 |    100% |           |
-| src/conventional\_release/cli.py          |       88 |        0 |       28 |        2 |     98% |97-\>106, 104-\>106 |
+| src/conventional\_release/cli.py          |       79 |        0 |       24 |        2 |     98% |92-\>99, 97-\>99 |
 | src/conventional\_release/cliff.py        |       71 |        0 |       16 |        0 |    100% |           |
-| src/conventional\_release/config.py       |      103 |        0 |       40 |        0 |    100% |           |
+| src/conventional\_release/config.py       |      103 |        1 |       40 |        2 |     98% |99-\>101, 116 |
 | src/conventional\_release/git.py          |       44 |        3 |        6 |        0 |     94% | 45, 55-56 |
 | src/conventional\_release/release.py      |      156 |        2 |       72 |        5 |     97% |66, 82-\>84, 84-\>86, 115, 209-\>211 |
-| src/conventional\_release/scaffold.py     |       54 |        0 |       16 |        0 |    100% |           |
 | src/conventional\_release/semver.py       |       18 |        1 |        8 |        1 |     92% |        22 |
 | src/conventional\_release/versionfiles.py |       95 |        3 |       42 |        3 |     96% |68, 88, 105 |
-| **TOTAL**                                 |  **636** |   **11** |  **228** |   **11** | **97%** |           |
+| **TOTAL**                                 |  **573** |   **12** |  **208** |   **13** | **97%** |           |
 
 
 ## Setup coverage badge
