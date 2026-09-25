@@ -16,9 +16,9 @@ on:
   workflow_call:
     inputs:
       tool-spec:
-        description: "What `uvx --from` installs, e.g. `conventional-release==0.1.0`"
+        description: "What `uvx --from` installs, e.g. `conventional-release==0.3.1` (0.3.1+: needs `publish-release`)"
         type: string
-        default: "conventional-release>=0.2,<1"
+        default: "conventional-release>=0.3.1,<1"
       working-directory:
         description: Directory of the project inside the repository
         type: string
