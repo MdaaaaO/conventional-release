@@ -49,6 +49,8 @@ ecosystems where adding Node just to write a changelog isn't worth it.
    (publish to PyPI or npm, build images) run after it in the same workflow.
 
 The tag is never created on the release branch: after a squash merge, that commit never lands on `main`.
+If the Release step fails after the tag was already pushed, re-running the `tag` workflow (same
+commit) publishes the still-missing Release without re-tagging.
 
 ## Install
 

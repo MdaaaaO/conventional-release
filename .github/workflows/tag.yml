@@ -7,6 +7,10 @@ name: tag
 # Run your publish jobs *after* it in the same workflow (`needs: tag`, `if: released`): a tag
 # pushed with GITHUB_TOKEN starts no other workflow, so `on: push: tags` would never fire.
 # The caller grants `contents: write`.
+#
+# If the tag gets pushed but the "GitHub Release" step then fails (network, token, notes
+# error), just re-run the workflow (same commit): `detect` sees the tag already on HEAD and the
+# release step publishes the still-missing Release, without re-tagging.
 
 on:
   workflow_call:
@@ -75,11 +79,11 @@ jobs:
           uvx --from "$TOOL" conventional-release tag "$VERSION" --push
 
       - name: GitHub Release
-        if: steps.detect.outputs.released == 'true' && inputs.github-release
+        # Runs both right after a fresh tag (released == true) and on a re-run that finds the
+        # tag already on HEAD but no Release yet (released == false, tag still set) — the CLI
+        # command is idempotent, so either way it only creates what's missing.
+        if: inputs.github-release && (steps.detect.outputs.released == 'true' || steps.detect.outputs.tag != '')
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.detect.outputs.version }}
-          TAG: ${{ steps.detect.outputs.tag }}
-        run: |
-          uvx --from "$TOOL" conventional-release notes "$VERSION" > "$RUNNER_TEMP/notes.md"
-          gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
+        run: uvx --from "$TOOL" conventional-release publish-release "$VERSION"

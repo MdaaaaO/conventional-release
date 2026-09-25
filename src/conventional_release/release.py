@@ -211,6 +211,36 @@ def create_tag(config: Config, version: str, *, push: bool) -> str:
     return tag
 
 
+def publish_release(config: Config, version: str) -> bool:
+    """CI: publish the GitHub Release for `version`'s tag if it doesn't have one yet.
+
+    Idempotent, so it's safe both right after `tag` (fresh tag, no Release yet) and on a
+    re-run of a workflow whose "create GitHub Release" step failed after the tag was already
+    pushed (`detect` still reports `released=false` then, but names the HEAD tag) — that re-run
+    is the repair path. Returns whether it created the Release. Never mistakes an auth/network
+    failure in `gh release view` for a missing Release: only "release not found" is treated that
+    way, anything else raises.
+    """
+    gh = shutil.which("gh")
+    if gh is None:
+        raise ReleaseError("gh is not installed")
+    tag = config.tag(version.removeprefix(config.tag_prefix))
+    view = subprocess.run(
+        [gh, "release", "view", tag], cwd=config.root, capture_output=True, text=True
+    )
+    if view.returncode == 0:
+        return False
+    if "release not found" not in view.stderr.lower():
+        raise ReleaseError(f"gh release view {tag} failed: {view.stderr.strip()}")
+    args = [gh, "release", "create", tag, "--title", tag, "--notes", notes(config, version)]
+    create = subprocess.run(
+        [*args, "--verify-tag"], cwd=config.root, capture_output=True, text=True
+    )
+    if create.returncode != 0:
+        raise ReleaseError(f"gh release create failed: {create.stderr.strip()}")
+    return True
+
+
 def check_title(config: Config, title: str) -> list[str]:
     """Problems with a PR title / commit subject; empty when it is a valid conventional commit."""
     types = "|".join(re.escape(t.type) for t in config.types)
