@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file. Generated b
 [conventional-release](https://github.com/MdaaaaO/conventional-release) from
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## 0.2.0 (2026-09-25)
+
+
+### Features
+
+* init command writes the config and the caller workflows ([#16](https://github.com/MdaaaaO/conventional-release/issues/16)) ([35406ab](https://github.com/MdaaaaO/conventional-release/commit/35406ab2c103d2242a6551ba5ef676059b61f99a))
+* keep package-lock.json in step with package.json ([#14](https://github.com/MdaaaaO/conventional-release/issues/14)) ([db435e3](https://github.com/MdaaaaO/conventional-release/commit/db435e385f33bcc9f7c87490a17eeebfd2def486))
+
+
+### Documentation
+
+* issue forms for bug reports and feature requests ([#12](https://github.com/MdaaaaO/conventional-release/issues/12)) ([59f8d14](https://github.com/MdaaaaO/conventional-release/commit/59f8d14fd45cce7c7160a792b859045bd8731c9a))
+
 ## 0.1.2 (2026-09-25)
 
 
