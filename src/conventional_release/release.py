@@ -80,7 +80,7 @@ def prepend(path: Path, section: str) -> None:
             break
     else:
         if lines and not lines[-1].endswith("\n"):
-            lines.append("\n")
+            lines[-1] += "\n"
         if lines and lines[-1].strip():
             lines.append("\n")
         lines.append(section)

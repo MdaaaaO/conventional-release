@@ -231,3 +231,14 @@ def test_cli(released: Path, commit: Commit, capsys: pytest.CaptureFixture[str])
     out, err = capsys.readouterr()
     assert out.startswith("1.0.1\n1.0.0\n## 1.0.1 (")
     assert "release 1.0.0 -> 1.0.1" in err and "no section for 9.9.9" in err
+
+
+def test_prepend_without_earlier_releases(tmp_path: Path) -> None:
+    fresh = tmp_path / "NEW.md"
+    release.prepend(fresh, "## 0.1.0 (d)\n\n* a\n")
+    assert fresh.read_text() == cliff.HEADER + "## 0.1.0 (d)\n\n* a\n"
+
+    notes_only = tmp_path / "CHANGELOG.md"
+    notes_only.write_text("# Changelog\n\nSome intro.")
+    release.prepend(notes_only, "## 0.1.0 (d)\n")
+    assert notes_only.read_text() == "# Changelog\n\nSome intro.\n\n## 0.1.0 (d)\n"
