@@ -1,6 +1,6 @@
 [project]
 name = "conventional-release"
-version = "0.2.0"
+version = "0.3.0"
 description = "standard-version-style CHANGELOG and release PRs from Conventional Commits, tagged by CI after the merge. No Node."
 readme = "README.md"
 license = "Apache-2.0"
